@@ -1,0 +1,41 @@
+Subject: [PATCH] HID: amd_sfh: Add DMI quirk for HP ENVY x360 15-ds1xxx
+
+The HP ENVY x360 Convertible 15-ds1xxx does not discover its AMD Sensor
+Fusion Hub sensors with the default MP2 interrupt handling. Keep MP2
+interrupts enabled for this machine, using the existing DMI callback.
+
+Match the product name and board identity to limit the workaround to the
+verified platform (HP board 87A9, revision 27.17).
+
+Tested on:
+  HP ENVY x360 Convertible 15-ds1xxx
+  AMD Ryzen 5 4500U
+  Board 87A9, revision 27.17
+  CachyOS kernel 7.3.0-4 with this quirk
+
+The accelerometer, gyroscope, and magnetometer registered as IIO devices,
+and automatic screen rotation worked.
+
+---
+ drivers/hid/amd-sfh-hid/amd_sfh_pcie.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/hid/amd-sfh-hid/amd_sfh_pcie.c b/drivers/hid/amd-sfh-hid/amd_sfh_pcie.c
+--- a/drivers/hid/amd-sfh-hid/amd_sfh_pcie.c
++++ b/drivers/hid/amd-sfh-hid/amd_sfh_pcie.c
+@@ -1917,4 +1917,15 @@ static const struct dmi_system_id dmi_sfh_table[] = {
+ 		},
+ 	},
++	{
++		/* HP ENVY x360 Convertible 15-ds1xxx (board 87A9, rev 27.17) */
++		.callback = mp2_disable_intr,
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "HP"),
++			DMI_MATCH(DMI_PRODUCT_NAME,
++				  "HP ENVY x360 Convertible 15-ds1xxx"),
++			DMI_MATCH(DMI_BOARD_NAME, "87A9"),
++			DMI_MATCH(DMI_BOARD_VERSION, "27.17"),
++		},
++	},
+ 	{}
+ };
